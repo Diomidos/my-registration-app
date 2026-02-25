@@ -1,25 +1,37 @@
 import React from 'react';
-import logo from './logo.svg';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import RegistrationForm from './RegistrationForm';
+import Home from './home';
 import './App.css';
 
-function App() {
+// Компонент для главной страницы с регистрацией
+const RegistrationPage: React.FC = () => {
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
+        <h1>Добро пожаловать на мой сайт</h1>
+        <p className="App-subtitle">
+          Тут вас ждёт что-то волшебное
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
       </header>
+      <main className="App-main">
+        <RegistrationForm />
+      </main>
+      <footer className="App-footer">
+        <p>© Diomidos. Все права защищены.</p>
+      </footer>
     </div>
+  );
+};
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<RegistrationPage />} />
+        <Route path="/home" element={<Home />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

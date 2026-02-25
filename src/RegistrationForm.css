@@ -1,0 +1,151 @@
+.registration-container {
+  max-width: 480px;
+  margin: 40px auto;
+  padding: 32px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(247, 223, 30, 0.15);
+  border: 1px solid #f7df1e22;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+}
+
+.registration-title {
+  text-align: center;
+  color: #323330;
+  margin-bottom: 32px;
+  font-size: 28px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.js-icon {
+  background: #f7df1e;
+  color: #323330;
+  font-weight: 900;
+  font-size: 24px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(247, 223, 30, 0.4);
+}
+
+.registration-icon {
+  margin-right: 8px;
+  vertical-align: middle; /* выравнивание по центру текста */
+}
+
+.registration-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #323330;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.form-label::after {
+  content: '*';
+  color: #e74c3c;
+  font-size: 18px;
+}
+
+.form-input {
+  padding: 14px 16px;
+  border: 2px solid #e0e6ed;
+  border-radius: 10px;
+  font-size: 16px;
+  transition: all 0.25s ease;
+  background: #f8f9fa;
+  color: #323330;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #f7df1e;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(247, 223, 30, 0.2);
+}
+
+.form-input::placeholder {
+  color: #a0aec0;
+}
+
+.input-error {
+  border-color: #e74c3c !important;
+  background: #fff5f5 !important;
+}
+
+.input-error:focus {
+  box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.2) !important;
+}
+
+.error-message {
+  color: #e74c3c;
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.error-message::before {
+  content: '⚠';
+  font-size: 16px;
+}
+
+.submit-button {
+  background: linear-gradient(135deg, #f7df1e 0%, #f0c81c 100%);
+  color: #323330;
+  border: none;
+  padding: 16px 32px;
+  font-size: 18px;
+  font-weight: 700;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 16px;
+  letter-spacing: 0.5px;
+}
+
+.submit-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(247, 223, 30, 0.4);
+  background: linear-gradient(135deg, #f8e436 0%, #f2d21a 100%);
+}
+
+.submit-button:active {
+  transform: translateY(0);
+}
+
+.submit-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(247, 223, 30, 0.4);
+}
+
+.form-note {
+  text-align: center;
+  color: #718096;
+  font-size: 14px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e2e8f0;
+}
