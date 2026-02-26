@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import RegistrationForm from './RegistrationForm';
-import Home from './home';
+import RegistrationForm from './components/RegistrationForm/RegistrationForm';
+import Home from './components/HOME/home';
 import './App.css';
 
 // Компонент для главной страницы с регистрацией
