@@ -28,15 +28,15 @@ export default defineConfig({
     },
   ],
 
-  // Запуск сервера перед тестами
   webServer: {
-    // В CI: собираем и запускаем preview, локально: dev-сервер
+    // В CI: собираем и запускаем через serve
+    // Локально: dev-сервер
     command: process.env.CI 
-      ? 'npm run build && npm run preview'  // для CI
-      : 'npm run dev',                        // для локальной разработки
-    url: process.env.CI ? 'http://localhost:4173' : 'http://localhost:3000',
+      ? 'npm run build && npx serve -s build -l 3000'  // для CRA
+      : 'npm run dev',                                   // для локальной разработки
+    url: 'http://localhost:3000',                        // единый порт для всех
     reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000, // увеличиваем таймаут для CI до 120 секунд
+    timeout: 120 * 1000, // 120 секунд на сборку и запуск
     stdout: 'pipe',
     stderr: 'pipe',
   },
