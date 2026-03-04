@@ -1,11 +1,11 @@
 import React, { useState, FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom'; // Добавляем импорт
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios'; // Установите: npm install axios
 import './RegistrationForm.css';
 
 // Определяем интерфейс для данных формы
 interface FormData {
   username: string;
-  email: string;
   password: string;
   confirmPassword: string;
 }
@@ -13,24 +13,29 @@ interface FormData {
 // Определяем интерфейс для ошибок валидации
 interface FormErrors {
   username?: string;
-  email?: string;
   password?: string;
   confirmPassword?: string;
+  general?: string; // для общих ошибок сервера
 }
 
 const RegistrationForm: React.FC = () => {
-  const navigate = useNavigate(); // Хук для навигации
+  const navigate = useNavigate();
   
   // Состояние для данных формы
   const [formData, setFormData] = useState<FormData>({
     username: '',
-    email: '',
     password: '',
     confirmPassword: '',
   });
 
   // Состояние для ошибок
   const [errors, setErrors] = useState<FormErrors>({});
+  
+  // Состояние для загрузки (чтобы блокировать кнопку при отправке)
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  
+  // Состояние для сообщения об успехе
+  const [successMessage, setSuccessMessage] = useState<string>('');
 
   // Обработка изменения значений в полях ввода
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,6 +49,13 @@ const RegistrationForm: React.FC = () => {
       setErrors({
         ...errors,
         [name]: undefined,
+      });
+    }
+    // Очищаем общую ошибку при изменении любого поля
+    if (errors.general) {
+      setErrors({
+        ...errors,
+        general: undefined,
       });
     }
   };
@@ -71,25 +83,65 @@ const RegistrationForm: React.FC = () => {
   };
 
   // Обработка отправки формы
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
-    if (validateForm()) {
-      // Здесь обычно отправка данных на сервер
-      console.log('Форма отправлена:', formData);
+    if (!validateForm()) {
+      console.log('В форме есть ошибки:', errors);
+      return;
+    }
+
+    setIsLoading(true);
+    setSuccessMessage('');
+    
+    try {
+      // Отправляем данные на сервер
+      // Если вы настроили proxy в package.json, можно использовать относительный путь
+      const response = await axios.post('http://localhost:5000/api/register', {
+        username: formData.username,
+        password: formData.password
+        // confirmPassword не отправляем на сервер, он нужен только для валидации
+      });
+
+      console.log('Ответ сервера:', response.data);
       
-      // Перенаправляем на страницу home после успешной регистрации
-      navigate('/home');
+      // Показываем сообщение об успехе
+      setSuccessMessage('Регистрация прошла успешно! Перенаправляем...');
       
-      // Сброс формы (опционально)
+      // Сброс формы
       setFormData({
         username: '',
-        email: '',
         password: '',
         confirmPassword: '',
       });
-    } else {
-      console.log('В форме есть ошибки:', errors);
+      
+      // Перенаправляем на страницу home через 2 секунды
+      setTimeout(() => {
+        navigate('/home');
+      }, 2000);
+      
+    } catch (error: any) {
+      console.error('Ошибка при регистрации:', error);
+      
+      // Обрабатываем ошибку от сервера
+      if (error.response) {
+        // Сервер вернул ошибку
+        setErrors({
+          general: error.response.data.message || 'Ошибка при регистрации на сервере'
+        });
+      } else if (error.request) {
+        // Запрос был отправлен, но нет ответа
+        setErrors({
+          general: 'Сервер не отвечает. Проверьте, запущен ли сервер (npm start в папке server)'
+        });
+      } else {
+        // Ошибка при настройке запроса
+        setErrors({
+          general: 'Ошибка при отправке запроса'
+        });
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -103,6 +155,21 @@ const RegistrationForm: React.FC = () => {
         />
         Регистрация
       </h2>
+      
+      {/* Сообщение об успехе */}
+      {successMessage && (
+        <div className="success-message" style={{ color: 'green', marginBottom: '15px' }}>
+          {successMessage}
+        </div>
+      )}
+      
+      {/* Общая ошибка (например, сервер не отвечает) */}
+      {errors.general && (
+        <div className="error-message general-error" style={{ color: 'red', marginBottom: '15px' }}>
+          {errors.general}
+        </div>
+      )}
+      
       <form onSubmit={handleSubmit} className="registration-form" noValidate>
         <div className="form-group">
           <label htmlFor="username" className="form-label">
@@ -116,6 +183,7 @@ const RegistrationForm: React.FC = () => {
             onChange={handleChange}
             className={`form-input ${errors.username ? 'input-error' : ''}`}
             placeholder="Введите ваше имя"
+            disabled={isLoading}
           />
           {errors.username && <span className="error-message">{errors.username}</span>}
         </div>
@@ -132,6 +200,7 @@ const RegistrationForm: React.FC = () => {
             onChange={handleChange}
             className={`form-input ${errors.password ? 'input-error' : ''}`}
             placeholder="Не менее 6 символов"
+            disabled={isLoading}
           />
           {errors.password && <span className="error-message">{errors.password}</span>}
         </div>
@@ -148,14 +217,19 @@ const RegistrationForm: React.FC = () => {
             onChange={handleChange}
             className={`form-input ${errors.confirmPassword ? 'input-error' : ''}`}
             placeholder="Повторите пароль"
+            disabled={isLoading}
           />
           {errors.confirmPassword && (
             <span className="error-message">{errors.confirmPassword}</span>
           )}
         </div>
 
-        <button type="submit" className="submit-button">
-          Зарегистрироваться
+        <button 
+          type="submit" 
+          className="submit-button"
+          disabled={isLoading}
+        >
+          {isLoading ? 'Отправка...' : 'Зарегистрироваться'}
         </button>
 
         <p className="form-note">
