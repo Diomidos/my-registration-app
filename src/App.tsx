@@ -9,7 +9,7 @@ const RegistrationPage: React.FC = () => {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Добро пожаловать на мой сайт</h1>
+        <h1>Hello!</h1>
         <p className="App-subtitle">
           Тут вас ждёт что-то волшебное
         </p>
@@ -26,7 +26,12 @@ const RegistrationPage: React.FC = () => {
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       <Routes>
         <Route path="/" element={<RegistrationPage />} />
         <Route path="/home" element={<Home />} />

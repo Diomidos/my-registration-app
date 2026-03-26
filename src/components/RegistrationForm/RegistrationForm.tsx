@@ -1,67 +1,68 @@
-import React, { useState, FormEvent } from 'react';
+import React, { useState, FormEvent, useRef, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios'; // Установите: npm install axios
+import axios from 'axios';
 import './RegistrationForm.css';
 
-// Определяем интерфейс для данных формы
 interface FormData {
   username: string;
   password: string;
   confirmPassword: string;
 }
 
-// Определяем интерфейс для ошибок валидации
 interface FormErrors {
   username?: string;
   password?: string;
   confirmPassword?: string;
-  general?: string; // для общих ошибок сервера
+  general?: string;
 }
 
 const RegistrationForm: React.FC = () => {
   const navigate = useNavigate();
-  
-  // Состояние для данных формы
   const [formData, setFormData] = useState<FormData>({
     username: '',
     password: '',
     confirmPassword: '',
   });
-
-  // Состояние для ошибок
   const [errors, setErrors] = useState<FormErrors>({});
-  
-  // Состояние для загрузки (чтобы блокировать кнопку при отправке)
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  
-  // Состояние для сообщения об успехе
   const [successMessage, setSuccessMessage] = useState<string>('');
+  
+  const isSubmitting = useRef(false);
+  const redirectTimeout = useRef<NodeJS.Timeout>();
+  const mounted = useRef(true);
 
-  // Обработка изменения значений в полях ввода
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  React.useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      if (redirectTimeout.current) {
+        clearTimeout(redirectTimeout.current);
+      }
+    };
+  }, []);
+
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       [name]: value,
-    });
-    // Очищаем ошибку при начале редактирования поля
+    }));
+    
     if (errors[name as keyof FormErrors]) {
-      setErrors({
-        ...errors,
+      setErrors(prev => ({
+        ...prev,
         [name]: undefined,
-      });
+      }));
     }
-    // Очищаем общую ошибку при изменении любого поля
     if (errors.general) {
-      setErrors({
-        ...errors,
+      setErrors(prev => ({
+        ...prev,
         general: undefined,
-      });
+      }));
     }
-  };
+  }, [errors]);
 
-  // Функция валидации формы
-  const validateForm = (): boolean => {
+  const validateForm = useCallback((): boolean => {
     const newErrors: FormErrors = {};
 
     if (!formData.username.trim()) {
@@ -80,74 +81,85 @@ const RegistrationForm: React.FC = () => {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [formData]);
 
-  // Обработка отправки формы
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = useCallback(async (e: FormEvent) => {
     e.preventDefault();
     
+    if (isSubmitting.current || isLoading) {
+      return;
+    }
+    
     if (!validateForm()) {
-      console.log('В форме есть ошибки:', errors);
       return;
     }
 
+    isSubmitting.current = true;
     setIsLoading(true);
     setSuccessMessage('');
     
     try {
-      // Отправляем данные на сервер
-      // Если вы настроили proxy в package.json, можно использовать относительный путь
       const response = await axios.post('http://localhost:5000/api/register', {
         username: formData.username,
         password: formData.password
-        // confirmPassword не отправляем на сервер, он нужен только для валидации
       });
 
       console.log('Ответ сервера:', response.data);
       
-      // Показываем сообщение об успехе
-      setSuccessMessage('Регистрация прошла успешно! Перенаправляем...');
+      if (mounted.current) {
+        setSuccessMessage('Регистрация прошла успешно! Перенаправляем...');
+        
+        // Очищаем форму
+        setFormData({
+          username: '',
+          password: '',
+          confirmPassword: '',
+        });
+        setErrors({});
+      }
       
-      // Сброс формы
-      setFormData({
-        username: '',
-        password: '',
-        confirmPassword: '',
-      });
+      // Очищаем предыдущий таймаут
+      if (redirectTimeout.current) {
+        clearTimeout(redirectTimeout.current);
+      }
       
-      // Перенаправляем на страницу home через 2 секунды
-      setTimeout(() => {
-        navigate('/home');
-      }, 2000);
+      // Устанавливаем таймаут для редиректа
+      redirectTimeout.current = setTimeout(() => {
+        if (mounted.current) {
+          isSubmitting.current = false;
+          setIsLoading(false);
+          // Используем replace для предотвращения возврата на страницу регистрации
+          navigate('/home', { replace: true });
+        }
+      }, 1500);
       
     } catch (error: any) {
       console.error('Ошибка при регистрации:', error);
       
-      // Обрабатываем ошибку от сервера
-      if (error.response) {
-        // Сервер вернул ошибку
-        setErrors({
-          general: error.response.data.message || 'Ошибка при регистрации на сервере'
-        });
-      } else if (error.request) {
-        // Запрос был отправлен, но нет ответа
-        setErrors({
-          general: 'Сервер не отвечает. Проверьте, запущен ли сервер (npm start в папке server)'
-        });
-      } else {
-        // Ошибка при настройке запроса
-        setErrors({
-          general: 'Ошибка при отправке запроса'
-        });
+      if (mounted.current) {
+        if (error.response) {
+          setErrors({
+            general: error.response.data.message || 'Ошибка при регистрации на сервере'
+          });
+        } else if (error.request) {
+          setErrors({
+            general: 'Сервер не отвечает. Проверьте, запущен ли сервер'
+          });
+        } else {
+          setErrors({
+            general: 'Ошибка при отправке запроса'
+          });
+        }
+        
+        isSubmitting.current = false;
+        setIsLoading(false);
       }
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [formData, validateForm, isLoading, navigate]);
 
   return (
     <div className="registration-container">
-      <h2>
+      <h2 data-testid="registration-title">
         <img 
           src="/icon-touch-id.svg" 
           alt="touch id" 
@@ -156,14 +168,12 @@ const RegistrationForm: React.FC = () => {
         Регистрация
       </h2>
       
-      {/* Сообщение об успехе */}
       {successMessage && (
         <div className="success-message" style={{ color: 'green', marginBottom: '15px' }}>
           {successMessage}
         </div>
       )}
       
-      {/* Общая ошибка (например, сервер не отвечает) */}
       {errors.general && (
         <div className="error-message general-error" style={{ color: 'red', marginBottom: '15px' }}>
           {errors.general}
@@ -240,4 +250,4 @@ const RegistrationForm: React.FC = () => {
   );
 };
 
-export default RegistrationForm;
+export default memo(RegistrationForm);
