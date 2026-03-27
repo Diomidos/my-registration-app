@@ -123,15 +123,18 @@ const RegistrationForm: React.FC = () => {
         clearTimeout(redirectTimeout.current);
       }
       
-      // Устанавливаем таймаут для редиректа
-      redirectTimeout.current = setTimeout(() => {
-        if (mounted.current) {
-          isSubmitting.current = false;
-          setIsLoading(false);
-          // Используем replace для предотвращения возврата на страницу регистрации
-          navigate('/home', { replace: true });
-        }
-      }, 1500);
+      if (mounted.current) {
+  setSuccessMessage('Регистрация прошла успешно! Перенаправляем...');
+  setFormData({
+    username: '',
+    password: '',
+    confirmPassword: '',
+  });
+  setErrors({});
+  isSubmitting.current = false;
+  setIsLoading(false);
+  navigate('/home', { replace: true });
+}
       
     } catch (error: any) {
       console.error('Ошибка при регистрации:', error);
